@@ -18,8 +18,11 @@ class GeminiChaosClient:
         if not self.client:
             raise ValueError("GEMINI_API_KEY not configured.")
 
+        # Try gemini-1.5-flash as standard fallback if dynamic model identifier fails
+        model_name = "gemini-1.5-flash"
+        
         response = self.client.models.generate_content(
-            model="gemini-2.0-flash",
+            model=model_name,
             contents=user_prompt,
             config=types.GenerateContentConfig(
                 system_instruction=system_prompt,
