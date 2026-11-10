@@ -19,7 +19,7 @@ class GeminiChaosClient:
             raise ValueError("GEMINI_API_KEY not configured.")
 
         response = self.client.models.generate_content(
-            model="gemini-3.8-flash",
+            model="gemini-3.5-flash-lite",
             contents=user_prompt,
             config=types.GenerateContentConfig(
                 system_instruction=system_prompt,
