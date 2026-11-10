@@ -2,21 +2,9 @@
   - type: web
     name: chaoskernel-api
     runtime: python
-    plan: starter
+    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
-    envVars:
-      - key: ENVIRONMENT
-        value: production
-      - key: GEMINI_API_KEY
-        sync: false
-
-  - type: worker
-    name: chaos-workflow-pipeline
-    runtime: python
-    plan: starter
-    buildCommand: pip install -r requirements.txt
-    startCommand: python -m app.engine.workflow_runner
     envVars:
       - key: ENVIRONMENT
         value: production
