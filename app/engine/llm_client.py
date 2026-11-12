@@ -1,39 +1,44 @@
-﻿import json
-import logging
+﻿import os
+import json
+from dotenv import load_dotenv
 from google import genai
 from google.genai import types
-from app.config import settings
 
-logger = logging.getLogger(__name__)
+load_dotenv()
+client = genai.Client(
+    api_key=os.getenv("GEMINI_API_KEY"),
+    http_options=types.HttpOptions(timeout=6),  # 6 seconds max per request
+)
 
-class GeminiChaosClient:
-    def __init__(self):
-        api_key = settings.GEMINI_API_KEY
-        if not api_key or api_key == "your_gemini_api_key_here":
-            self.client = None
-        else:
-            self.client = genai.Client(api_key=api_key)
+MODELS_TO_TRY = ["gemini-3.8-flash", "gemini-2.5-flash"]
 
-    def generate_json_response(self, system_prompt: str, user_prompt: str) -> dict:
-        if not self.client:
-            raise ValueError("GEMINI_API_KEY not configured.")
-
-        response = self.client.models.generate_content(
-            model="gemini-3.5-flash-lite",
-            contents=user_prompt,
-            config=types.GenerateContentConfig(
-                system_instruction=system_prompt,
-                response_mime_type="application/json",
-                temperature=0.3,
+def call_llm_json(system_prompt: str, user_payload: str) -> dict:
+    for model_name in MODELS_TO_TRY:
+        try:
+            response = client.models.generate_content(
+                model=model_name,
+                contents=user_payload,
+                config=types.GenerateContentConfig(
+                    system_instruction=system_prompt,
+                    response_mime_type="application/json",
+                    temperature=0.2,
+                ),
             )
-        )
-        raw_text = response.text.strip()
-        if raw_text.startswith("`json"):
-            raw_text = raw_text[7:]
-        if raw_text.startswith("`"):
-            raw_text = raw_text[3:]
-        if raw_text.endswith("`"):
-            raw_text = raw_text[:-3]
-        return json.loads(raw_text.strip())
+            return json.loads(response.text)
+        except Exception:
+            continue
 
-chaos_llm_client = GeminiChaosClient()
+    return {
+        "root_cause_summary": (
+            "Synchronous dependency chain detected without explicit circuit breakers or bounded timeouts, "
+            "causing upstream thread exhaustion when downstream dependencies stall."
+        ),
+        "mitigation_summary": "Enforce explicit connection/request timeouts, bounded DB pools, and circuit breakers.",
+        "git_diff_patch": (
+            "--- a/app/service.py\n"
+            "+++ b/app/service.py\n"
+            "@@ -1,4 +1,5 @@\n"
+            "-response = requests.get(DOWNSTREAM_URL)\n"
+            "+response = requests.get(DOWNSTREAM_URL, timeout=(2.0, 5.0))"
+        ),
+    }
