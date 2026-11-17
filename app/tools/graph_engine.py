@@ -64,3 +64,33 @@ def compute_blast_radius(
     order = {"FAILED": 0, "DEGRADED": 1, "HEALTHY": 2}
     results.sort(key=lambda x: (order[x["status"]], x["hop"]))
     return results
+def compute_resilience_metrics(edges, nodes):
+    G = nx.DiGraph()
+    for e in edges:
+        src = e.get("Source") or e.get("source")
+        tgt = e.get("Target") or e.get("target")
+        if src and tgt:
+            G.add_edge(src, tgt)
+    for n in nodes:
+        if n["name"] not in G:
+            G.add_node(n["name"])
+    total = max(len(nodes), 1)
+    failed = sum(1 for n in nodes if n["status"] == "FAILED")
+    degraded = sum(1 for n in nodes if n["status"] == "DEGRADED")
+    sync_count = sum(1 for e in edges if e.get("coupling", "SYNC") == "SYNC")
+    sync_ratio = sync_count / max(len(edges), 1)
+    centrality = nx.betweenness_centrality(G) if len(G) > 2 else {}
+    if centrality and max(centrality.values()) > 0:
+        spof_node, spof_score = max(centrality.items(), key=lambda x: x[1])
+    else:
+        roots = [n["name"] for n in nodes if n.get("hop") == 0]
+        spof_node = roots[0] if roots else (nodes[0]["name"] if nodes else "Unknown")
+        spof_score = 0.0
+    penalty = ((failed / total) * 55.0) + ((degraded / total) * 25.0) + (sync_ratio * 15.0) + (spof_score * 15.0)
+    score = max(5, min(100, int(round(100.0 - penalty))))
+    return {
+        "resilience_score": score,
+        "spof_node": spof_node,
+        "spof_centrality": round(spof_score, 2),
+        "blast_radius_pct": int(round(((failed + degraded) / total) * 100)),
+    }

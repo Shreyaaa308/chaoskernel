@@ -8,6 +8,7 @@ from app.schemas.nonilion import NonilionIncomingMessage, NonilionOutgoingReply,
 from app.schemas.chaos_state import ChaosAnalysisResult
 from app.core.guardrails import validate_incident_context
 from app.engine.analyzer import run_autonomous_analysis
+from app.tools.graph_engine import compute_resilience_metrics
 from app.services.visualizer import generate_blast_radius_chart
 from app.services.exporter import generate_markdown_report, generate_pdf_report
 
@@ -75,6 +76,7 @@ def handle_webhook(payload: NonilionIncomingMessage):
     result = run_autonomous_analysis(payload.text, payload.room_id)
 
     # 3. Adapt to Teammate 2's Visualizer & Exporter
+    metrics = compute_resilience_metrics([e.model_dump() for e in result.edges], [n.model_dump() for n in result.nodes])
     chaos_payload = _to_teammate2_payload(result)
     chart_b64 = generate_blast_radius_chart(chaos_payload)
     md_report = generate_markdown_report(chaos_payload)
@@ -96,7 +98,7 @@ def handle_webhook(payload: NonilionIncomingMessage):
 
     chat_reply = (
         f"🚨 **ChaosKernel Autonomous Audit: `{result.target_name}`** (`{chaos_payload['severity']}`)\n\n"
-        f"{vuln_banner}"
+        f"📊 **Resilience Score:** {metrics['resilience_score']}/100 | 🎯 **Primary SPOF:** {metrics['spof_node']} | 💥 **Blast Radius:** {metrics['blast_radius_pct']}%\n\n{vuln_banner}"
         f"⚡ **Root Cause:** {result.root_cause_summary}\n\n"
         f"🛡️ **Auto-Immune Fix:** {result.mitigation_summary}\n\n"
         f"```diff\n{result.git_diff_patch}\n```\n"
