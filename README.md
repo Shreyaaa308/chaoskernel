@@ -55,3 +55,31 @@ ChaosKernel/
 ├── tests/                      # Unit & integration tests
 ├── render.yaml                 # Render web service blueprint
 └── requirements.txt
+
+## System Architecture & Execution Flow
+
+```mermaid
+flowchart LR
+    User([Chat / Nonilion Webhook]) --> Guard{Rule #5 Guardrail}
+    Guard -- Vague Prompt --> Reject[Clarification Prompt]
+    Guard -- Valid Repo / Arch --> Fetch[GitHub Repo Fetcher & Static Scanner]
+    Fetch --> Graph[NetworkX DiGraph & Blast-Radius BFS]
+    Graph --> Metrics[Resilience Score 0-100 & SPOF Centrality]
+    Metrics --> LLM[Gemini Reasoning & Auto-Immune Diff]
+    LLM --> Session[(Room Session Store)]
+    LLM --> Out[Multi-Modal Output]
+    Out --> PNG[Blast-Radius Chart .png]
+    Out --> PDF[Hardening Spec .pdf]
+    Out --> MD[Patch Manifest .md]
+```
+
+---
+
+## Sample Outputs Produced
+
+### 1. Multi-Hop Blast Radius Chart (`.png`)
+![Sample Blast Radius Chart](docs/assets/sample-blast-radius.png)
+
+### 2. Executive Hardening Report (`.pdf`) & Unified Diff
+> Once you save a screenshot of your generated PDF spec to `docs/assets/sample-hardening-report.png`, uncomment the line below:
+> `![Executive Hardening Spec](docs/assets/sample-hardening-report.png)`
