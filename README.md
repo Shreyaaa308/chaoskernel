@@ -81,5 +81,13 @@ flowchart LR
 ![Sample Blast Radius Chart](docs/assets/sample-blast-radius.png)
 
 ### 2. Executive Hardening Report (`.pdf`) & Unified Diff
-> Once you save a screenshot of your generated PDF spec to `docs/assets/sample-hardening-report.png`, uncomment the line below:
-> `![Executive Hardening Spec](docs/assets/sample-hardening-report.png)`
+
+Every audit attaches a compiled ReportLab PDF executive summary alongside a ready-to-apply unified patch:
+
+```diff
+--- a/src/orders/client.py
++++ b/src/orders/client.py
+@@ -40,3 +40,3 @@
+-    resp = httpx.post(PAYMENT_URL, json=order_data)
++    resp = httpx.post(PAYMENT_URL, json=order_data, timeout=2.0)
+```
