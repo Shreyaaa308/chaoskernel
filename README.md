@@ -1,7 +1,5 @@
 # ChaosKernel v2.0
 
-![ChaosKernel v2.0 Architecture](docs/assets/chaoskernel-dashboard.png)
-
 ChaosKernel is an autonomous microservice resilience and chaos-engineering agent built for chat-driven operations (designed to plug directly into Nonilion rooms). Drop any public GitHub repository URL or service architecture description into chat, and ChaosKernel maps its dependency graph, simulates multi-hop failure cascades, pinpoints Single Points of Failure (SPOFs), and generates ready-to-apply `git diff` hardening patches.
 
 ---
